@@ -9,6 +9,7 @@ import enigma.midtrans.repository.TransactionRepository;
 import enigma.midtrans.service.TransactionService;
 import enigma.midtrans.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
@@ -34,7 +36,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .build()
         );
         TransactionDetails transactionDetails = TransactionDetails.builder()
-                .order_id(String.format("test-%d", createdTransaction.getId()))
+                .order_id(String.format("test1-%d", createdTransaction.getId()))
                 .gross_amount(transactionDTO.getAmount())
                 .build();
         CustomerDetails customerDetails = CustomerDetails.builder()
@@ -64,6 +66,11 @@ public class TransactionServiceImpl implements TransactionService {
             createdTransaction.setRedirectUrl(response.getRedirect_url());
             transactionRepository.save(createdTransaction);
         }
+        executorService.submit(() -> updateTransactionStatus(
+                createdTransaction.getId(),
+                transactionDTO.getUserId(),
+                transactionDTO.getAmount()
+        ));
 
         return createdTransaction;
     }
@@ -72,5 +79,34 @@ public class TransactionServiceImpl implements TransactionService {
     public Transaction findById(Integer id) {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+    }
+
+    private void updateTransactionStatus(Integer id, Integer userId, Integer amount) {
+        for (int i = 0; i < 20; i++) {
+            try {
+                log.info("attempt {} to updateTransactionStatus()", i);
+                GetTransactionDetailResponse response = restClient
+                        .get()
+                        .uri("https://api.sandbox.midtrans.com/v2/test1-" + id + "/status")
+                        .header("Authorization", "Basic U0ItTWlkLXNlcnZlci1QOVcxQWtKc29rMmFQQ3BfcHdzZ05iVVA6")
+                        .retrieve()
+                        .body(GetTransactionDetailResponse.class);
+                if (response != null && response.getTransaction_status().equals("capture")) {
+                    Transaction foundTransaction = findById(id);
+                    User foundUser = userService.findById(userId);
+                    foundTransaction.setStatus(TransactionStatus.CHARGED);
+                    foundUser.setBalance(foundUser.getBalance() + amount);
+                    transactionRepository.save(foundTransaction);
+                    log.info("Transaction status updated to charge");
+                    log.info("user balance updated");
+                    break;
+                }
+                log.info("Transaction status is not 'capture'");
+                Thread.sleep(30000);
+            } catch (Exception e) {
+                log.error("error in updateTransactionStatus() {}", e.getMessage());
+            }
+        }
+        log.info("Exiting updateTransactionStatus()");
     }
 }
