@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class InvoiceDTO {
-    private String token;
-    private String redirectUrl;
+public class TransactionDetails {
+    private String order_id;
+    private Integer gross_amount;
 }

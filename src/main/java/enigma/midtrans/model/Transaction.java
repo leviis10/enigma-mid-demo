@@ -1,32 +1,32 @@
 package enigma.midtrans.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "transactions")
+public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private User user;
 
-    private String email;
+    private Integer amount;
 
-    private String phone;
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
 
-    private Integer balance;
-
-    @OneToMany(mappedBy = "user")
-    private List<Transaction> transactions;
+    private String redirectUrl;
 }
