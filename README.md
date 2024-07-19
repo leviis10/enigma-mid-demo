@@ -1,40 +1,24 @@
-## Create Invoice
+# Midtrans API
 
-### Endpoint
+## Kelompok
+- Levi
+- Randy
+- Zul
+- Ipin
 
-POST -> https://app.sandbox.midtrans.com/snap/v1/transactions
+## Docs
+[Postman example](https://www.postman.com/dark-trinity-353543/workspace/enigma-levi/collection/14212009-e09bdcf2-91ec-412e-82ce-6db38e39528a?action=share&creator=14212009)
+Endpoint:
 
-### Response Body
+- POST /api/transactions
 
-```json
+Example of request body
+
+```text
 {
-  "transaction_details": {
-    "order_id": "t-2",
-    "gross_amount": 10000
-  },
-  "customer_details": {
-    "first_name": "Levi",
-    "email": "levi@example.com",
-    "phone": "085156231354"
-  },
-  "page_expiry": {
-    "duration": 5,
-    "unit": "minutes"
-  },
-  "enabled_payments": [
-    "credit_card"
-  ]
+    "userId": {userId},
+    "amount": 10000
 }
 ```
 
-### Header
-
-Authorization Basic {ServerKey}
-
-## Check Payment Status
-
-### Endpoint
-
-GET -> https://api.sandbox.midtrans.com/v2/{order_id}/status
-
-
+- GET /api/transactions/{transactionId}

@@ -36,7 +36,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .build()
         );
         TransactionDetails transactionDetails = TransactionDetails.builder()
-                .order_id(String.format("test1-%d", createdTransaction.getId()))
+                .order_id(String.format("test-%d", createdTransaction.getId()))
                 .gross_amount(transactionDTO.getAmount())
                 .build();
         CustomerDetails customerDetails = CustomerDetails.builder()
@@ -87,11 +87,11 @@ public class TransactionServiceImpl implements TransactionService {
                 log.info("attempt {} to updateTransactionStatus()", i);
                 GetTransactionDetailResponse response = restClient
                         .get()
-                        .uri("https://api.sandbox.midtrans.com/v2/test1-" + id + "/status")
+                        .uri("https://api.sandbox.midtrans.com/v2/test-" + id + "/status")
                         .header("Authorization", "Basic U0ItTWlkLXNlcnZlci1QOVcxQWtKc29rMmFQQ3BfcHdzZ05iVVA6")
                         .retrieve()
                         .body(GetTransactionDetailResponse.class);
-                if (response != null && response.getTransaction_status().equals("capture")) {
+                if (response != null && "capture".equals(response.getTransaction_status())) {
                     Transaction foundTransaction = findById(id);
                     User foundUser = userService.findById(userId);
                     foundTransaction.setStatus(TransactionStatus.CHARGED);
@@ -101,8 +101,7 @@ public class TransactionServiceImpl implements TransactionService {
                     log.info("user balance updated");
                     break;
                 }
-                log.info("Transaction status is not 'capture'");
-                Thread.sleep(30000);
+                Thread.sleep(3000);
             } catch (Exception e) {
                 log.error("error in updateTransactionStatus() {}", e.getMessage());
             }
