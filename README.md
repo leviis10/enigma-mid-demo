@@ -1,12 +1,23 @@
 # Midtrans API
 
 ## Kelompok
+
 - Levi
 - Randy
 - Zul
 - Ipin
 
+## Before Start
+
+set environment variable for:
+
+- MIDTRANS_SERVER_KEY
+- DB_URI
+- DB_USERNAME
+- DB_PASSWORD
+
 ## Docs
+
 [Postman example](https://www.postman.com/dark-trinity-353543/workspace/enigma-levi/collection/14212009-e09bdcf2-91ec-412e-82ce-6db38e39528a?action=share&creator=14212009)
 Endpoint:
 

@@ -10,6 +10,7 @@ import enigma.midtrans.service.TransactionService;
 import enigma.midtrans.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -24,6 +25,9 @@ public class TransactionServiceImpl implements TransactionService {
     private final UserService userService;
     private final RestClient restClient;
     private final ExecutorService executorService;
+    @Value("${midtrans.serverkey}")
+    private String midtransServerKey;
+    private String idPrefix = "test";
 
     @Override
     public Transaction create(TransactionDTO transactionDTO) {
@@ -36,7 +40,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .build()
         );
         TransactionDetails transactionDetails = TransactionDetails.builder()
-                .order_id(String.format("test-%d", createdTransaction.getId()))
+                .order_id(String.format("%s-%d", idPrefix, createdTransaction.getId()))
                 .gross_amount(transactionDTO.getAmount())
                 .build();
         CustomerDetails customerDetails = CustomerDetails.builder()
@@ -52,7 +56,7 @@ public class TransactionServiceImpl implements TransactionService {
         CreateTransactionResponse response = restClient
                 .post()
                 .uri("https://app.sandbox.midtrans.com/snap/v1/transactions")
-                .header("Authorization", "Basic U0ItTWlkLXNlcnZlci1QOVcxQWtKc29rMmFQQ3BfcHdzZ05iVVA6")
+                .header("Authorization", "Basic " + midtransServerKey)
                 .body(TransactionBody.builder()
                         .transaction_details(transactionDetails)
                         .customer_details(customerDetails)
@@ -87,8 +91,8 @@ public class TransactionServiceImpl implements TransactionService {
                 log.info("attempt {} to updateTransactionStatus()", i);
                 GetTransactionDetailResponse response = restClient
                         .get()
-                        .uri("https://api.sandbox.midtrans.com/v2/test-" + id + "/status")
-                        .header("Authorization", "Basic U0ItTWlkLXNlcnZlci1QOVcxQWtKc29rMmFQQ3BfcHdzZ05iVVA6")
+                        .uri(String.format("https://api.sandbox.midtrans.com/v2/%s-%d/status", idPrefix, id))
+                        .header("Authorization", "Basic " + midtransServerKey)
                         .retrieve()
                         .body(GetTransactionDetailResponse.class);
                 if (response != null && "capture".equals(response.getTransaction_status())) {
