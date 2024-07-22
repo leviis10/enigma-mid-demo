@@ -16,4 +16,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
+    @Override
+    public void updateBalance(Integer id, Integer amount) {
+        User foundUser = findById(id);
+        foundUser.setBalance(foundUser.getBalance() + amount);
+        userRepository.save(foundUser);
+    }
 }

@@ -28,7 +28,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final ExecutorService executorService;
     @Value("${midtrans.serverkey}")
     private String midtransServerKey;
-    private String idPrefix = "compose";
 
     @Override
     public Transaction create(TransactionDTO transactionDTO) {
@@ -90,7 +89,6 @@ public class TransactionServiceImpl implements TransactionService {
     private void updateTransactionStatus(Integer id, String orderId, Integer userId, Integer amount) {
         for (int i = 0; i < 20; i++) {
             try {
-                log.info("attempt {} to updateTransactionStatus()", i);
                 GetTransactionDetailResponse response = restClient
                         .get()
                         .uri(String.format("https://api.sandbox.midtrans.com/v2/%s/status", orderId))
@@ -99,12 +97,9 @@ public class TransactionServiceImpl implements TransactionService {
                         .body(GetTransactionDetailResponse.class);
                 if (response != null && "capture".equals(response.getTransaction_status())) {
                     Transaction foundTransaction = findById(id);
-                    User foundUser = userService.findById(userId);
                     foundTransaction.setStatus(TransactionStatus.CHARGED);
-                    foundUser.setBalance(foundUser.getBalance() + amount);
                     transactionRepository.save(foundTransaction);
-                    log.info("Transaction status updated to charge");
-                    log.info("user balance updated");
+                    userService.updateBalance(userId, amount);
                     break;
                 }
                 Thread.sleep(3000);

@@ -27,6 +27,6 @@ public class User {
 
     private Integer balance;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private List<Transaction> transactions;
 }
