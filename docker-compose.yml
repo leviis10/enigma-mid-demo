@@ -1,0 +1,20 @@
+services:
+  payment-database:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: midtrans
+
+  payment-api:
+    image: test-midtrans:1.0
+    ports:
+      - "8080:8080"
+    environment:
+      DB_PASSWORD: password
+      DB_URI: jdbc:postgresql://payment-database:5432/midtrans
+      DB_USERNAME: postgres
+      MIDTRANS_SERVER_KEY: U0ItTWlkLXNlcnZlci1QOVcxQWtKc29rMmFQQ3BfcHdzZ05iVVA6
+
+networks:
+  payment-network:
+    driver: bridge

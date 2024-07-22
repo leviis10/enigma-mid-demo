@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 @Service
@@ -27,7 +28,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final ExecutorService executorService;
     @Value("${midtrans.serverkey}")
     private String midtransServerKey;
-    private String idPrefix = "test";
+    private String idPrefix = "compose";
 
     @Override
     public Transaction create(TransactionDTO transactionDTO) {
@@ -40,7 +41,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .build()
         );
         TransactionDetails transactionDetails = TransactionDetails.builder()
-                .order_id(String.format("%s-%d", idPrefix, createdTransaction.getId()))
+                .order_id(UUID.randomUUID().toString())
                 .gross_amount(transactionDTO.getAmount())
                 .build();
         CustomerDetails customerDetails = CustomerDetails.builder()
@@ -72,6 +73,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         executorService.submit(() -> updateTransactionStatus(
                 createdTransaction.getId(),
+                transactionDetails.getOrder_id(),
                 transactionDTO.getUserId(),
                 transactionDTO.getAmount()
         ));
@@ -85,13 +87,13 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
     }
 
-    private void updateTransactionStatus(Integer id, Integer userId, Integer amount) {
+    private void updateTransactionStatus(Integer id, String orderId, Integer userId, Integer amount) {
         for (int i = 0; i < 20; i++) {
             try {
                 log.info("attempt {} to updateTransactionStatus()", i);
                 GetTransactionDetailResponse response = restClient
                         .get()
-                        .uri(String.format("https://api.sandbox.midtrans.com/v2/%s-%d/status", idPrefix, id))
+                        .uri(String.format("https://api.sandbox.midtrans.com/v2/%s/status", orderId))
                         .header("Authorization", "Basic " + midtransServerKey)
                         .retrieve()
                         .body(GetTransactionDetailResponse.class);
